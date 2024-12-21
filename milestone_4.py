@@ -3,114 +3,133 @@ import random
 class Hangman:
     """
     A class representing the Hangman game.
-    
-    Attributes:
-        word_list (list[str]): A list of possible words to pick from.
-        num_lives (int): How many incorrect guesses a player can make before losing.
-        word (str): The randomly chosen word from word_list.
-        word_guessed (list[str]): A list showing which letters are guessed. 
-                                  Underscores for unguessed letters.
-        num_letters (int): Number of UNIQUE letters in 'word' that haven't been guessed yet.
-        list_of_guesses (list[str]): All letters the player has already guessed.
     """
 
-    def __init__(self, word_list, num_lives=5):
+    def __init__(self, possible_words, lives=5):
         """
-        Initialize the Hangman game with the provided list of words and number of lives.
-
-        :param word_list: A list of possible words from which one is chosen randomly.
-        :param num_lives: The number of lives (wrong guesses) allowed (default is 5).
+        Initialize the Hangman game.
+        
+        :param possible_words: A list of possible words from which one is randomly chosen.
+        :param lives: The number of wrong guesses allowed (default = 5).
         """
-        self.word_list = word_list
-        self.num_lives = num_lives
+        self.possible_words = possible_words
+        self.lives = lives
 
-        # Randomly select a word from the list
-        self.word = random.choice(self.word_list)
+        # Pick a secret word
+        self.secret_word = random.choice(self.possible_words)
 
-        # Represent unguessed letters in the word with underscores
-        self.word_guessed = ["_" for _ in self.word]
+        # Create a list of underscores for each character
+        self.revealed_word = ["_" for _ in self.secret_word]
 
-        # The count of unique letters in the word
-        self.num_letters = len(set(self.word))
+        # Count how many UNIQUE letters in the secret word
+        self.remaining_unique_letters = len(set(self.secret_word))
 
-        # Keep track of the letters guessed so far (in lowercase)
-        self.list_of_guesses = []
+        # Track all guessed letters (in lowercase)
+        self.guessed_letters = []
 
-        # (Optional) Debugging print to reveal the chosen word
-        # print(f"DEBUG: The secret word is '{self.word}'")
+        # Debug (comment out if desired)
+        # print(f"DEBUG: secret_word = {self.secret_word}")
+
+    def prompt_for_guess(self):
+        """
+        Prompt the user for a single alphabetical character and validate it.
+        
+        :return: A valid (new) guess as a lowercase string, or None if invalid or repeated.
+        """
+        guess = input("Enter a single letter: ").strip().lower()
+
+        if len(guess) != 1 or not guess.isalpha():
+            print("Invalid letter. Please enter a single alphabetical character.")
+            return None
+
+        if guess in self.guessed_letters:
+            print("You already tried that letter!")
+            return None
+
+        return guess
 
     def check_guess(self, guess):
         """
-        Check if 'guess' is in 'self.word' and update game state accordingly.
+        Check if 'guess' is in the secret word. Update game state and print messages.
         
-        Task 3 Recap:
-        - If the guess is in 'word', replace the relevant underscores in 'word_guessed'.
-        
-        Task 4:
-        - If the guess is NOT in 'word', reduce 'num_lives' by 1 and print the required messages.
-
-        :param guess: The letter the user guessed.
+        :param guess: A single lowercase letter that has not been guessed before.
         """
-        guess = guess.lower()
+        self.guessed_letters.append(guess)
 
-        if guess in self.word:
+        if guess in self.secret_word:
             print(f"Good guess! '{guess}' is in the word.")
-            # Reveal each occurrence of the guessed letter
-            for index, letter in enumerate(self.word):
+            # Reveal all instances of the guessed letter
+            for index, letter in enumerate(self.secret_word):
                 if letter == guess:
-                    self.word_guessed[index] = guess
+                    self.revealed_word[index] = guess
             # Decrement the count of unique letters
-            self.num_letters -= 1
+            self.remaining_unique_letters -= 1
         else:
-            # Task 4: The guess is incorrect
-            self.num_lives -= 1
+            # Decrement a life if incorrect
+            self.lives -= 1
             print(f"Sorry, '{guess}' is not in the word.")
-            print(f"You have {self.num_lives} live(s) left.")
+            print(f"You have {self.lives} live(s) left.")
 
-    def ask_for_input(self):
+    def play_turn(self):
         """
-        Continuously ask the user for a single alphabetical character until we get a new valid guess.
+        Play a single turn of the game by asking for a guess and handling the result.
         
-        - If invalid (not one letter or not alpha), prompt again.
-        - If already guessed, inform the player.
-        - Else, record the guess and call check_guess().
+        :return: True if a valid guess was made (even if it's wrong), False if input was invalid.
         """
-        while True:
-            guess = input("Enter a single letter: ")
+        guess = self.prompt_for_guess()
+        if guess is None:
+            # Invalid or repeated guess
+            return False
+        
+        self.check_guess(guess)
+        return True
 
-            # Validate the guess
-            if len(guess) != 1 or not guess.isalpha():
-                print("Invalid letter. Please enter a single alphabetical character.")
-            elif guess.lower() in self.list_of_guesses:
-                print("You already tried that letter!")
-            else:
-                self.list_of_guesses.append(guess.lower())
-                self.check_guess(guess)
-                break  # Stop asking after processing one valid guess
+    def is_word_guessed(self):
+        """
+        Check if all unique letters have been discovered.
+        
+        :return: True if 'remaining_unique_letters' is 0, else False.
+        """
+        return self.remaining_unique_letters == 0
+
+    def is_out_of_lives(self):
+        """
+        Check if the player has run out of lives.
+        
+        :return: True if 'lives' is 0, else False.
+        """
+        return self.lives == 0
 
     def __repr__(self):
         """
-        Developer-friendly representation of the Hangman object for debugging.
+        Developer-friendly representation for debugging.
         """
         return (
-            f"Hangman(word='{self.word}', num_lives={self.num_lives}, "
-            f"word_guessed={self.word_guessed}, num_letters={self.num_letters}, "
-            f"list_of_guesses={self.list_of_guesses})"
+            f"Hangman(secret_word='{self.secret_word}', lives={self.lives}, "
+            f"revealed_word={self.revealed_word}, "
+            f"remaining_unique_letters={self.remaining_unique_letters}, "
+            f"guessed_letters={self.guessed_letters})"
         )
 
-# Optional: Quick test if you run this file directly
+# Example usage / test code
 if __name__ == "__main__":
-    sample_words = ["apple", "pears", "watermelon", "orange", "banana"]
-    game = Hangman(sample_words, num_lives=3)
-    
-    while game.num_lives > 0 and game.num_letters > 0:
-        game.ask_for_input()
-        if game.num_letters == 0:
-            print(f"Congratulations! You guessed all letters of '{''.join(game.word_guessed)}'.")
-            break
-        elif game.num_lives == 0:
-            print(f"You ran out of lives! The word was '{game.word}'.")
-            break
+    words = ["apple", "banana", "orange", "mango", "grape"]
+    game = Hangman(words, lives=3)
+
+    while not game.is_word_guessed() and not game.is_out_of_lives():
+        print("Current progress:", " ".join(game.revealed_word))
+        
+        # Keep looping until user makes a valid attempt
+        valid_turn = game.play_turn()
+        if not valid_turn:
+            # If turn was invalid, keep trying without reducing a life
+            continue
+
+        # If the guess was valid, check conditions
+        if game.is_word_guessed():
+            print(f"Congratulations! The word was '{''.join(game.revealed_word)}'.")
+        elif game.is_out_of_lives():
+            print(f"You ran out of lives! The word was '{game.secret_word}'.")
 
     print("Game Over!")
     print("DEBUG:", game)
