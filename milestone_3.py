@@ -1,52 +1,59 @@
 import random
 
-def create_word_list():
+def get_possible_words():
     """
-    Returns a list of possible words.
+    Return a list of possible words to guess.
     """
-    return ["apple", "pears", "watermelon", "orange", "banana"]
+    return ["apple", "banana", "orange", "mango", "grape"]
 
-def check_guess(guess, word):
+def is_valid_guess(guess):
     """
-    Converts the guess to lowercase and checks if it is in 'word'.
-    Prints an appropriate message.
-    """
-    guess = guess.lower()  # Convert the guess to lowercase
+    Check if the user's guess is a single alphabetical character.
     
-    if guess in word:
+    :param guess: The user's raw input string
+    :return: True if valid (one letter and alphabetic), otherwise False
+    """
+    return len(guess) == 1 and guess.isalpha()
+
+def prompt_for_guess():
+    """
+    Continuously ask the user for a valid guess.
+    Return the guess once it's valid.
+    """
+    while True:
+        guess = input("Enter a single letter: ")
+        if is_valid_guess(guess):
+            return guess.lower()  # convert to lowercase in one place
+        else:
+            print("Invalid letter. Please enter a single alphabetical character.")
+
+def check_guess_in_word(guess, secret_word):
+    """
+    Check if 'guess' is contained in 'secret_word', and print a message.
+    
+    :param guess: A single lowercase letter
+    :param secret_word: The randomly chosen word
+    """
+    if guess in secret_word:
         print(f"Good guess! '{guess}' is in the word.")
     else:
         print(f"Sorry, '{guess}' is not in the word. Try again.")
 
-def ask_for_input(word):
+def play_hangman():
     """
-    Continuously asks the user for a valid single-letter guess.
-    Once a valid guess is entered, calls check_guess() to see if it is in 'word'.
+    Main function to run a single guess cycle of the Hangman game.
     """
-    while True:
-        guess = input("Enter a single letter: ")
-        
-        # Check if guess is a single alphabetical character
-        if len(guess) == 1 and guess.isalpha():
-            check_guess(guess, word)  # Pass guess and word to check_guess()
-            break  # After one valid guess, we break. 
-                   # Later, you can expand the logic for multiple rounds.
-        else:
-            print("Invalid letter. Please enter a single alphabetical character.")
+    word_list = get_possible_words()
+    secret_word = random.choice(word_list)
+    
+    # Debug: Uncomment if you want to see the word
+    # print("DEBUG - Secret word:", secret_word)
+    
+    # Get a valid guess from the user
+    guess = prompt_for_guess()
+    
+    # Check whether the guess is in the secret word
+    check_guess_in_word(guess, secret_word)
 
-def main():
-    # 1. Create a list of words
-    word_list = create_word_list()
-    
-    # 2. Choose one random word
-    word = random.choice(word_list)
-    
-    # (Optional) Print the chosen word for debugging
-    print("SECRET WORD (for testing):", word)
-    
-    # 3. Call ask_for_input() to prompt the user, then check the guess
-    ask_for_input(word)
-
-# Standard Python practice to call main() if this file is run directly
 if __name__ == "__main__":
-    main()
+    play_hangman()
